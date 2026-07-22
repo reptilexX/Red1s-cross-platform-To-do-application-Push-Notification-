@@ -1,0 +1,12 @@
+{
+  "name": "reminder-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Checks Firestore for due task reminders and sends them via Firebase Cloud Messaging. Runs on a GitHub Actions cron schedule — no server, no Blaze plan needed.",
+  "scripts": {
+    "send": "node send-reminders.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.3.1"
+  }
+}

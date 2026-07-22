@@ -1,0 +1,30 @@
+name: Send Due Reminders
+
+on:
+  schedule:
+    # Every 5 minutes. GitHub's cron isn't second-precise — expect
+    # reminders to arrive within a few minutes of their exact time,
+    # sometimes more under GitHub's own load. Fine for task reminders,
+    # not meant for split-second alerts.
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab to test
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: reminder-bot
+        run: npm install
+
+      - name: Send due reminders
+        working-directory: reminder-bot
+        run: npm run send
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}

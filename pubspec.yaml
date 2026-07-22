@@ -1,0 +1,50 @@
+name: todo_app
+description: A cross-platform to-do app with main tasks, subtasks, and reminders.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.1.2
+
+  # Local storage (no code generation needed - we store plain Maps)
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.3
+
+  # Reminders / notifications
+  flutter_local_notifications: ^17.2.2  # Android reminders
+  local_notifier: ^0.1.6                # Windows/macOS/Linux reminders
+  timezone: ^0.9.4
+
+  # Utilities
+  uuid: ^4.4.0
+  intl: ^0.19.0
+
+  # Desktop window control (mini/always-on-top mode)
+  window_manager: ^0.4.3
+  screen_retriever: ^0.2.0
+
+  cupertino_icons: ^1.0.6
+
+  # --- Cloud sync (enabled) ---
+  firebase_core: ^3.1.0
+  cloud_firestore: ^5.0.1
+  firebase_auth: ^5.1.0
+  # Push notifications (separate optional step — see README "Push
+  # notifications" section) still commented out until you want that too: 
+  firebase_messaging: ^15.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
