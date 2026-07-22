@@ -61,7 +61,13 @@ async function main() {
         .doc(uid)
         .collection('fcmTokens')
         .get();
-      const tokens = tokensSnap.docs.map((d) => d.id);
+      // Tolerate either shape: token used as the document ID (the
+      // documented convention), or stored in an `fcmToken` field —
+      // whichever the app's actual save code uses, this still finds it.
+      const tokenDocs = tokensSnap.docs
+        .map((d) => ({ ref: d.ref, token: d.data()?.fcmToken || d.id }))
+        .filter((t) => Boolean(t.token));
+      const tokens = tokenDocs.map((t) => t.token);
 
       if (tokens.length > 0) {
         const label =
@@ -77,11 +83,18 @@ async function main() {
           });
           sentCount += response.successCount;
           if (response.failureCount > 0) {
-            response.responses.forEach((r, i) => {
-              if (!r.success) {
-                console.warn(`Failed to send to token ${tokens[i]}:`, r.error?.message);
+            for (const [i, r] of response.responses.entries()) {
+              if (r.success) continue;
+              console.warn(`Failed to send to token ${tokens[i]}:`, r.error?.message);
+              // The device uninstalled the app or the token otherwise
+              // expired — Firebase confirms it'll never work again, so
+              // delete it now instead of retrying (and logging the
+              // same failure) on every future run.
+              if (r.error?.code === 'messaging/registration-token-not-registered') {
+                await tokenDocs[i].ref.delete();
+                console.log(`Removed stale token ${tokens[i]}.`);
               }
-            });
+            }
           }
         } catch (err) {
           console.error(`FCM send failed for user ${uid}, task ${taskDoc.id}:`, err);
