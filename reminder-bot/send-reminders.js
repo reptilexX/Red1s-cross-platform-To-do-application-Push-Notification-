@@ -65,8 +65,17 @@ async function main() {
       // documented convention), or stored in an `fcmToken` field —
       // whichever the app's actual save code uses, this still finds it.
       const tokenDocs = tokensSnap.docs
-        .map((d) => ({ ref: d.ref, token: d.data()?.fcmToken || d.id }))
+        .map((d) => ({ ref: d.ref, token: d.data()?.fcmToken || d.id, isUserDoc: false }))
         .filter((t) => Boolean(t.token));
+
+      // Also check for a single `fcmToken` field stored directly on the
+      // user document itself — some app versions save it there instead
+      // of in the fcmTokens subcollection above.
+      const userLevelToken = userDoc.data()?.fcmToken;
+      if (userLevelToken) {
+        tokenDocs.push({ ref: userDoc.ref, token: userLevelToken, isUserDoc: true });
+      }
+
       const tokens = tokenDocs.map((t) => t.token);
 
       if (tokens.length > 0) {
@@ -91,7 +100,13 @@ async function main() {
               // delete it now instead of retrying (and logging the
               // same failure) on every future run.
               if (r.error?.code === 'messaging/registration-token-not-registered') {
-                await tokenDocs[i].ref.delete();
+                if (tokenDocs[i].isUserDoc) {
+                  await tokenDocs[i].ref.update({
+                    fcmToken: admin.firestore.FieldValue.delete(),
+                  });
+                } else {
+                  await tokenDocs[i].ref.delete();
+                }
                 console.log(`Removed stale token ${tokens[i]}.`);
               }
             }
